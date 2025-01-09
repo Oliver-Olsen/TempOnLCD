@@ -3,6 +3,7 @@
 
 
 #include <Arduino.h>
+#include <LiquidCrystal.h>
 #define TEMPPIN A0
 #define INPUTVOLTAGE 5.0
 #define ANALOGMAX 1024.0
