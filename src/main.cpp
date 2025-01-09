@@ -1,6 +1,13 @@
 //Oliver Olsen s205443
 //Nils Wulff   s223968
 
+// 11a  The I2C is a way to communicate with one or more components at once.
+// The I2C works by sending the data over the serial data and serial clock.
+// The master (microcontoller) sends the adress that the data is for. The component
+// With the corrosponding adress then recieves the data. Id the adress wasn't a match,
+// the component ignores it. This way we can communicate with multiple components (but not at once!).
+// 11b  We can save power, by only printing when necessary.
+
 
 #include <Arduino.h>
 #include <Wire.h> 
