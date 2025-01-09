@@ -3,56 +3,50 @@
 
 
 #include <Arduino.h>
-#include <LiquidCrystal.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
 #define TEMPPIN A0
 #define INPUTVOLTAGE 5.0
 #define ANALOGMAX 1024.0
 #define OFFSET 0
+#define SAMPLESIZE 10
+#define SAMPLETIME 1500
+#define TOOHOT 28
 
-#define REDPIN 11
-#define YELLOWPIN 10
-#define GREENPIN 9
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-#define HOTTEMP 27
-#define COLDTEMP 24
-
-int analogInput = 0;
-float volt = 0;
-float tempMeasured = 0;
-
-
-
-
-float voltConvert(int analogInput);
+float temperature();
 
 void setup() {
   Serial.begin(9600);
   pinMode(TEMPPIN, INPUT);
-  pinMode(REDPIN, OUTPUT);
-  pinMode(YELLOWPIN, OUTPUT);
-  pinMode(GREENPIN, OUTPUT);
   
+  lcd.init();                      // initialize the lcd 
+  lcd.backlight(); 
 }
 
 void loop() {
-  analogInput = analogRead(TEMPPIN);
+  float SUM = 0; 
+  for (int i = 0; i < SAMPLESIZE; i++) {
+    SUM += temperature(); 
+    delay(SAMPLETIME / SAMPLESIZE);
+  }
+  float temp = SUM / SAMPLESIZE; 
+  Serial.println(temp); 
+  lcd.setCursor(0, 0); 
+  lcd.print(temp); 
+  lcd.print(char(223)); 
+  lcd.print("C");
 
-  // Store the new voltage
-  volt = voltConvert(analogInput);
-  Serial.print("Voltage measured/calculated: ");
-  Serial.println(volt);
-  // Temp calculated with formula: temperature_c = voltage * 100
-  tempMeasured = (volt-OFFSET) * 100;
-  Serial.print("Temperature measured: ");
-  Serial.print(tempMeasured);
-  Serial.write(u8"\u00B0");
-  Serial.println("C");
+  lcd.setCursor(0, 1); 
+  if (temp >= TOOHOT) {
+    lcd.print("TOO HOT!!!");
+  } else {
+    lcd.print("          "); 
+  }
 
-
-  // Delay added to reduce number print-outs
-  // The sensor can output data once per second
-  delay(1000);
-
+  delay(SAMPLETIME);
 }
 
 
@@ -62,10 +56,11 @@ void loop() {
  * @param analogInput 
  * @return int 
  */
-  float voltConvert(int analogInput){
-  float voltage = 0;
-  voltage = analogInput * (INPUTVOLTAGE/ANALOGMAX);
-  return voltage;
+float temperature(){
+  int analogInput = analogRead(TEMPPIN);
+  float voltage = analogInput * (INPUTVOLTAGE/ANALOGMAX); 
+  float tempMeasured = (voltage - OFFSET) * 100;
+  return tempMeasured;
 }
 
 
